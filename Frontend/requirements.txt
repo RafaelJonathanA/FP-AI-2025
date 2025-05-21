@@ -1,2 +1,7 @@
 streamlit
 Pillow
+numpy
+opencv-python
+psutil
+deepface
+tf-keras
