@@ -50,45 +50,44 @@ def ensure_model_exists():
     # DeepFace handles model downloads automatically
     pass
 
-def detect_and_crop_face(image):
+def detect_and_crop_face(image: Image.Image):
     """
     Mendeteksi wajah dan memotongnya dari gambar menggunakan DeepFace.
     
-    Args:
-        image: PIL Image object
-        
     Returns:
-        face_image: PIL Image yang diambil dari bagian wajah
+        face_image: PIL Image dari bagian wajah
         atau None jika tidak ada wajah yang terdeteksi
     """
-    # Convert PIL image to numpy array
-    img_array = np.array(image)
+    # Convert PIL image to numpy array (RGB)
+    img_array = np.array(image.convert("RGB"))
     
     try:
-        # Use DeepFace's face detection
+        # Gunakan DeepFace face extraction
         faces = DeepFace.extract_faces(
             img_path=img_array,
             detector_backend='opencv',
-            enforce_detection=False  # Don't raise error if face not detected
+            enforce_detection=False,
+            align=True
         )
-        
-        # If no faces detected or error occurred
+
         if not faces or len(faces) == 0:
             return None
+
+        # Ambil wajah pertama (atau dengan confidence tertinggi)
+        face_data = faces[0].get("face")
         
-        # Get the face with highest confidence
-        face_dict = max(faces, key=lambda x: x.get('confidence', 0))
-        
-        # Get face data
-        face_data = face_dict.get('face')
         if face_data is None:
             return None
-            
-        # Convert back to PIL image
-        face_image = Image.fromarray(face_data.astype('uint8'))
-        
+
+        # Jika datanya float, ubah ke uint8
+        if face_data.dtype != np.uint8:
+            face_data = (face_data * 255).astype("uint8")
+
+        # Convert ke PIL Image
+        face_image = Image.fromarray(face_data)
+
         return face_image
-        
+
     except Exception as e:
         print(f"Error in face detection: {str(e)}")
         return None
