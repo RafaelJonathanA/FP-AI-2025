@@ -5,3 +5,7 @@ opencv-python
 psutil
 deepface
 tf-keras
+tensorflow
+concurrent-futures
+matplotlib
+streamlit-extras
