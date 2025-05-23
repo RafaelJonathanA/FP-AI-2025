@@ -6,6 +6,6 @@ psutil
 deepface
 tf-keras
 tensorflow
-concurrent-futures
+futures
 matplotlib
 streamlit-extras
