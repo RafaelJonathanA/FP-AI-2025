@@ -121,26 +121,6 @@ use_parallel = st.sidebar.checkbox(
     help="Menggunakan threading untuk mempercepat analisis wajah"
 )
 
-# Enable caching
-use_caching = st.sidebar.checkbox(
-    "Enable Caching",
-    value=True,
-    help="Menyimpan hasil analisis untuk digunakan kembali"
-)
-
-# Clear cache button
-if st.sidebar.button("Clear Cache"):
-    cache_stats = clear_cache()
-    st.session_state.cached_results = {}
-    st.sidebar.success(f"Cache cleared: {cache_stats['cleared_items']} items removed")
-    
-# Display cache statistics
-cache_stats = get_cache_stats()
-st.sidebar.caption(f"Cache size: {cache_stats['size']} items")
-if cache_stats['hits'] > 0 or cache_stats['misses'] > 0:
-    st.sidebar.caption(f"Cache hit rate: {cache_stats['hit_rate']:.1f}%")
-    st.sidebar.caption(f"Time saved: {cache_stats['time_saved']:.2f} seconds")
-
 # Memory usage
 process = psutil.Process(os.getpid())
 memory_usage = process.memory_info().rss / (1024 * 1024)  # MB
@@ -165,7 +145,7 @@ with col1:
     uploaded_file1 = st.file_uploader("Load Image 1", type=["jpg", "jpeg", "png"], key="img1")
     if uploaded_file1 is not None:
         img1 = Image.open(uploaded_file1)
-        st.image(img1, caption="Original Image 1", use_container_width=True)
+        st.image(img1, caption="Original Image 1")
         
         # Detect and crop face
         with st.spinner("Detecting face..."):
@@ -174,7 +154,7 @@ with col1:
             detection_time = time.time() - start_time
             
             if face1 is not None:
-                st.image(face1, caption=f"Detected Face 1 ({detection_time:.2f}s)", use_container_width=True)
+                st.image(face1, caption=f"Detected Face 1 ({detection_time:.2f}s)")
             else:
                 st.markdown(
                     "<div class='warning-box'>⚠️ Tidak ada wajah terdeteksi pada gambar 1</div>", 
@@ -186,7 +166,7 @@ with col2:
     uploaded_file2 = st.file_uploader("Load Image 2", type=["jpg", "jpeg", "png"], key="img2")
     if uploaded_file2 is not None:
         img2 = Image.open(uploaded_file2)
-        st.image(img2, caption="Original Image 2", use_container_width=True)
+        st.image(img2, caption="Original Image 2")
         
         # Detect and crop face
         with st.spinner("Detecting face..."):
@@ -195,7 +175,7 @@ with col2:
             detection_time = time.time() - start_time
             
             if face2 is not None:
-                st.image(face2, caption=f"Detected Face 2 ({detection_time:.2f}s)", use_container_width=True)
+                st.image(face2, caption=f"Detected Face 2 ({detection_time:.2f}s)")
             else:
                 st.markdown(
                     "<div class='warning-box'>⚠️ Tidak ada wajah terdeteksi pada gambar 2</div>", 
@@ -252,11 +232,6 @@ if predict_button:
             time.sleep(0.2)
             my_bar.empty()
             
-            # Cache the result if caching is enabled
-            if use_caching:
-                key = f"{id(img1)}_{id(img2)}_{selected_model}_{selected_metric}_{selected_detector}"
-                st.session_state.cached_results[key] = result
-            
             # Display execution time
             st.caption(f"⏱️ Execution time: {execution_time:.2f} seconds")
             
@@ -289,38 +264,13 @@ if predict_button:
                 elif similarity_score > 0.50:
                     st.info("🔍 Interpretasi: Beberapa kemiripan wajah terdeteksi.")
                 else:
-                    st.info("🔍 Interpretasi: Kemungkinan orang yang berbeda.")
-                
-                # Display the detected faces side by side for easier comparison
-                detected_col1, detected_col2 = st.columns(2)
-                with detected_col1:
-                    if face1_detected is not None:
-                        st.image(face1_detected, caption="Detected Face 1", use_container_width=True)
-                with detected_col2:
-                    if face2_detected is not None:
-                        st.image(face2_detected, caption="Detected Face 2", use_container_width=True)
-                
+                    st.info("🔍 Interpretasi: Kemungkinan orang yang berbeda.")                
             else:
                 st.markdown(
                     "<div class='warning-box'>❌ Tidak dapat membandingkan wajah. Pastikan kedua gambar berisi wajah yang jelas.</div>",
                     unsafe_allow_html=True
                 )
                 st.info("Tips: Gunakan gambar dengan wajah yang jelas, pencahayaan cukup, dan menghadap ke depan.")
-                
-                # Display faces if detected, even if comparison failed
-                if face1_detected is not None or face2_detected is not None:
-                    detect_col1, detect_col2 = st.columns(2)
-                    with detect_col1:
-                        if face1_detected is not None:
-                            st.image(face1_detected, caption="Wajah Terdeteksi 1", width=150)
-                        else:
-                            st.warning("Wajah tidak terdeteksi pada gambar 1")
-                    
-                    with detect_col2:
-                        if face2_detected is not None:
-                            st.image(face2_detected, caption="Wajah Terdeteksi 2", width=150)
-                        else:
-                            st.warning("Wajah tidak terdeteksi pada gambar 2")
     else:
         st.markdown(
             "<div class='warning-box'>⚠️ Harap unggah kedua gambar terlebih dahulu.</div>",
@@ -343,7 +293,6 @@ st.sidebar.write(f"Model: {AVAILABLE_MODELS[selected_model]}")
 st.sidebar.write(f"Metrik: {AVAILABLE_METRICS[selected_metric]}")
 st.sidebar.write(f"Detector: {AVAILABLE_DETECTORS[selected_detector]}")
 st.sidebar.write(f"Parallel Processing: {'Enabled' if use_parallel else 'Disabled'}")
-st.sidebar.write(f"Caching: {'Enabled' if use_caching else 'Disabled'}")
 
 # Performance tips
 st.sidebar.subheader("Tips Optimasi")
