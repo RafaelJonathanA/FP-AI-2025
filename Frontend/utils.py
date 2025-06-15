@@ -2,8 +2,18 @@ from PIL import Image
 import numpy as np
 import cv2
 import os
-from deepface import DeepFace
-from typing import Dict, Optional, Union, List, Tuple
+import sys
+import types
+
+# Create .deepface directory before importing DeepFace
+home_dir = os.path.join(os.path.expanduser("~"), ".deepface")
+os.makedirs(home_dir, exist_ok=True)
+
+# Now import DeepFace
+try:
+    from deepface import DeepFace
+except Exception as e:
+    print(f"Warning: Error importing DeepFace: {str(e)}")
 import tensorflow as tf
 import hashlib
 import io
@@ -78,11 +88,24 @@ except:
 
 def ensure_model_exists():
     """
-    DeepFace will download the models automatically when needed.
-    This function now just serves as a placeholder for compatibility.
+    Makes sure the required model files are downloaded.
+    This prevents downloading during the first prediction.
     """
-    # DeepFace handles model downloads automatically
-    pass
+    import os
+    from deepface import DeepFace
+    
+    # Handle DeepFace folder creation
+    try:
+        # Create the .deepface directory directly
+        home_dir = os.path.join(os.path.expanduser("~"), ".deepface")
+        os.makedirs(home_dir, exist_ok=True)
+        
+        # Then build models
+        DeepFace.build_model("VGG-Face")
+        DeepFace.build_model("Facenet")
+        # Add other models as needed
+    except Exception as e:
+        print(f"Warning: Error pre-loading models: {str(e)}")
 
 def detect_and_crop_face(image: Image.Image, detector_backend: str = DEFAULT_DETECTOR):
     """

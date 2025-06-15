@@ -1,10 +1,9 @@
 import streamlit as st
 from PIL import Image
 from utils import (
-    face_similarity, face_similarity_optimized, face_similarity_parallel, 
-    detect_and_crop_face, ensure_model_exists, clear_cache, get_cache_stats,
-    AVAILABLE_MODELS, AVAILABLE_METRICS, AVAILABLE_DETECTORS, 
-    DEFAULT_DETECTOR, DEFAULT_MODEL, DEFAULT_METRIC
+    face_similarity_optimized, face_similarity_parallel, 
+    detect_and_crop_face, ensure_model_exists,
+    AVAILABLE_MODELS, AVAILABLE_METRICS, AVAILABLE_DETECTORS
 )
 import numpy as np
 import time
@@ -128,8 +127,15 @@ st.sidebar.caption(f"Memory usage: {memory_usage:.1f} MB")
 
 # Memuat model yang diperlukan
 with st.spinner("Mempersiapkan model pengenalan wajah..."):
-    ensure_model_exists()
-    st.success("✅ Model recognition siap digunakan")
+    try:
+        ensure_model_exists()
+        st.success("✅ Model recognition siap digunakan")
+    except FileExistsError:
+        # Directory already exists, which is fine
+        st.success("✅ Model recognition siap digunakan")
+    except Exception as e:
+        st.warning(f"⚠️ Warning: {str(e)}")
+        st.info("Aplikasi akan tetap berjalan, tetapi mungkin lebih lambat saat pertama kali melakukan prediksi")
 
 # Placeholder untuk gambar
 img1 = None
@@ -146,20 +152,6 @@ with col1:
     if uploaded_file1 is not None:
         img1 = Image.open(uploaded_file1)
         st.image(img1, caption="Original Image 1")
-        
-        # Detect and crop face
-        with st.spinner("Detecting face..."):
-            start_time = time.time()
-            face1 = detect_and_crop_face(img1, selected_detector)
-            detection_time = time.time() - start_time
-            
-            if face1 is not None:
-                st.image(face1, caption=f"Detected Face 1 ({detection_time:.2f}s)")
-            else:
-                st.markdown(
-                    "<div class='warning-box'>⚠️ Tidak ada wajah terdeteksi pada gambar 1</div>", 
-                    unsafe_allow_html=True
-                )
 
 with col2:
     st.markdown("<h3 class='sub-header'>Image 2</h3>", unsafe_allow_html=True)
@@ -167,20 +159,6 @@ with col2:
     if uploaded_file2 is not None:
         img2 = Image.open(uploaded_file2)
         st.image(img2, caption="Original Image 2")
-        
-        # Detect and crop face
-        with st.spinner("Detecting face..."):
-            start_time = time.time()
-            face2 = detect_and_crop_face(img2, selected_detector)
-            detection_time = time.time() - start_time
-            
-            if face2 is not None:
-                st.image(face2, caption=f"Detected Face 2 ({detection_time:.2f}s)")
-            else:
-                st.markdown(
-                    "<div class='warning-box'>⚠️ Tidak ada wajah terdeteksi pada gambar 2</div>", 
-                    unsafe_allow_html=True
-                )
 
 # Tombol Predict di tengah
 st.markdown("<br>", unsafe_allow_html=True)
